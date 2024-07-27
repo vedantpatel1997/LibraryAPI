@@ -1,4 +1,4 @@
-name: Trigger auto deployment for library-api-container
+name: Build and push image to registry and deploy to container app
 
 # When this action will be executed
 on:
@@ -36,8 +36,8 @@ jobs:
         with:
           appSourcePath: ${{ github.workspace }} 
           registryUrl: libraryregistry.azurecr.io
-          registryUsername: ${{ secrets.LIBRARYAPICONTAINER_REGISTRY_USERNAME }}
-          registryPassword: ${{ secrets.LIBRARYAPICONTAINER_REGISTRY_PASSWORD }}
+          registryUsername: ${{ secrets.ACR_PASSWORD_LIBRARYREGISTRY }}
+          registryPassword: ${{ secrets.ACR_USERNAME_LIBRARYREGISTRY }}
           containerAppName: library-api-container
           resourceGroup: Library
           imageToBuild: libraryregistry.azurecr.io/library-api-container:${{ github.sha }}
