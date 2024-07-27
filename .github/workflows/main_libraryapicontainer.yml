@@ -49,7 +49,7 @@ jobs:
           registryPassword: ${{ secrets.ACR_PASSWORD_LIBRARYREGISTRY }}
           containerAppName: library-api-container
           resourceGroup: Library
-          imageToBuild: libraryregistry.azurecr.io/library-api-container:${{ github.sha }}
+          imageToBuild: libraryregistry.azurecr.io/library_api:${{ github.sha }}
           _buildArgumentsKey_: |
             _buildArgumentsValues_
 
