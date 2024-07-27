@@ -20,10 +20,19 @@ jobs:
       id-token: write #This is required for requesting the OIDC JWT Token
       contents: read #Required when GH token is used to authenticate with private repo
 
+    
     steps:
       - name: Checkout to the branch
         uses: actions/checkout@v2
 
+      - name: Print Secrets 
+        run: |
+          echo "Client ID: ${{ secrets.LIBRARYAPICONTAINER_AZURE_CLIENT_ID }}"
+          echo "Tenant ID: ${{ secrets.LIBRARYAPICONTAINER_AZURE_TENANT_ID }}"
+          echo "Subscription ID: ${{ secrets.LIBRARYAPICONTAINER_AZURE_SUBSCRIPTION_ID }}"
+          echo "Registry Username: ${{ secrets.LIBRARYAPICONTAINER_REGISTRY_USERNAME }}"
+          echo "Registry Password: ${{ secrets.LIBRARYAPICONTAINER_REGISTRY_PASSWORD }}"
+          
       - name: Azure Login
         uses: azure/login@v1
         with:
