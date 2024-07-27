@@ -29,7 +29,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: libraryregistry.azurecr.io/libraryAPI:${{ github.sha }}
+          tags: libraryregistry.azurecr.io/library_api:${{ github.sha }}
           file: ./Dockerfile
 
   deploy:
@@ -44,4 +44,4 @@ jobs:
           app-name: 'LibraryLinuxContainer'
           slot-name: 'production'
           publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_LibraryLinuxContainer }}
-          images: 'libraryregistry.azurecr.io/libraryAPI:${{ github.sha }}'
+          images: 'libraryregistry.azurecr.io/library_api:${{ github.sha }}'
