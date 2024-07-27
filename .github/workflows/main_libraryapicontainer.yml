@@ -30,8 +30,8 @@ jobs:
           echo "Client ID: $(echo ${{secrets.LIBRARYAPICONTAINER_AZURE_CLIENT_ID}} | sed 's/./& /g')"
           echo "Tenant ID: $(echo ${{secrets.LIBRARYAPICONTAINER_AZURE_TENANT_ID}} | sed 's/./& /g')"
           echo "Subscription ID: $(echo ${{secrets.LIBRARYAPICONTAINER_AZURE_SUBSCRIPTION_ID}} | sed 's/./& /g')"
-          echo "Registry Username: $(echo ${{secrets.LIBRARYAPICONTAINER_REGISTRY_USERNAME}} | sed 's/./& /g')"
-          echo "Registry Password: $(echo ${{secrets.LIBRARYAPICONTAINER_REGISTRY_PASSWORD}} | sed 's/./& /g')"
+          echo "Registry Username: $(echo ${{secrets.ACR_USERNAME_LIBRARYREGISTRY}} | sed 's/./& /g')"
+          echo "Registry Password: $(echo ${{secrets.ACR_PASSWORD_LIBRARYREGISTRY}} | sed 's/./& /g')"
             
       - name: Azure Login
         uses: azure/login@v1
@@ -45,8 +45,8 @@ jobs:
         with:
           appSourcePath: ${{ github.workspace }} 
           registryUrl: libraryregistry.azurecr.io
-          registryUsername: ${{ secrets.LIBRARYAPICONTAINER_REGISTRY_USERNAME }}
-          registryPassword: ${{ secrets.LIBRARYAPICONTAINER_REGISTRY_PASSWORD }}
+          registryUsername: ${{ secrets.ACR_USERNAME_LIBRARYREGISTRY }}
+          registryPassword: ${{ secrets.ACR_PASSWORD_LIBRARYREGISTRY }}
           containerAppName: library-api-container
           resourceGroup: Library
           imageToBuild: libraryregistry.azurecr.io/library-api-container:${{ github.sha }}
