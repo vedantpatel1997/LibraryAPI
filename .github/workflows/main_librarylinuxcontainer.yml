@@ -1,0 +1,47 @@
+name: Build and deploy container app to Azure Web App - LibraryLinuxContainer
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to container registry
+        uses: docker/login-action@v2
+        with:
+          registry: libraryapi.azurecr.io
+          username: ${{ secrets.ACR_USERNAME_LibraryRegistry }}
+          password: ${{ secrets.ACR_PASSWORD_LibraryRegistry }}
+
+      - name: Build and push container image to registry
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: libraryregistry.azurecr.io/libraryAPI:${{ github.sha }}
+          file: ./Dockerfile
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'LibraryLinuxContainer'
+          slot-name: 'production'
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_LibraryLinuxContainer }}
+          images: 'libraryregistry.azurecr.io/libraryAPI:${{ github.sha }}'
