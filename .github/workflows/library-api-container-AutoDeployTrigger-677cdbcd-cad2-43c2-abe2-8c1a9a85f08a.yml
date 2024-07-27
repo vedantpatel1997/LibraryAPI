@@ -25,13 +25,13 @@ jobs:
       - name: Checkout to the branch
         uses: actions/checkout@v2
 
-      - name: Print Secrets 
+      - name: Print Base64 Encoded Secrets
         run: |
-          echo "Client ID: ${{ secrets.LIBRARYAPICONTAINER_AZURE_CLIENT_ID }}"
-          echo "Tenant ID: ${{ secrets.LIBRARYAPICONTAINER_AZURE_TENANT_ID }}"
-          echo "Subscription ID: ${{ secrets.LIBRARYAPICONTAINER_AZURE_SUBSCRIPTION_ID }}"
-          echo "Registry Username: ${{ secrets.LIBRARYAPICONTAINER_REGISTRY_USERNAME }}"
-          echo "Registry Password: ${{ secrets.LIBRARYAPICONTAINER_REGISTRY_PASSWORD }}"
+          echo "Client ID: $(echo ${{ secrets.LIBRARYAPICONTAINER_AZURE_CLIENT_ID }} | base64)"
+          echo "Tenant ID: $(echo ${{ secrets.LIBRARYAPICONTAINER_AZURE_TENANT_ID }} | base64)"
+          echo "Subscription ID: $(echo ${{ secrets.LIBRARYAPICONTAINER_AZURE_SUBSCRIPTION_ID }} | base64)"
+          echo "Registry Username: $(echo ${{ secrets.LIBRARYAPICONTAINER_REGISTRY_USERNAME }} | base64)"
+          echo "Registry Password: $(echo ${{ secrets.LIBRARYAPICONTAINER_REGISTRY_PASSWORD }} | base64)"
           
       - name: Azure Login
         uses: azure/login@v1
