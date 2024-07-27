@@ -20,7 +20,7 @@ jobs:
       - name: Log in to container registry
         uses: docker/login-action@v2
         with:
-          registry: libraryapi.azurecr.io
+          registry: libraryregistry.azurecr.io
           username: ${{ secrets.ACR_USERNAME_LibraryRegistry }}
           password: ${{ secrets.ACR_PASSWORD_LibraryRegistry }}
 
