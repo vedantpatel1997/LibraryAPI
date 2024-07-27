@@ -27,12 +27,8 @@ jobs:
 
       - name: Print Base64 Encoded Secrets
         run: |
-          echo "Client ID: ${${{ secrets.LIBRARYAPICONTAINER_AZURE_CLIENT_ID }}:0:4}****${${{ secrets.LIBRARYAPICONTAINER_AZURE_CLIENT_ID }}: -4}"
-          echo "Tenant ID: ${${{ secrets.LIBRARYAPICONTAINER_AZURE_TENANT_ID }}:0:4}****${${{ secrets.LIBRARYAPICONTAINER_AZURE_TENANT_ID }}: -4}"
-          echo "Subscription ID: ${${{ secrets.LIBRARYAPICONTAINER_AZURE_SUBSCRIPTION_ID }}:0:4}****${${{ secrets.LIBRARYAPICONTAINER_AZURE_SUBSCRIPTION_ID }}: -4}"
-          echo "Registry Username: ${${{ secrets.LIBRARYAPICONTAINER_REGISTRY_USERNAME }}:0:4}****${${{ secrets.LIBRARYAPICONTAINER_REGISTRY_USERNAME }}: -4}"
-          echo "Registry Password: ${${{ secrets.LIBRARYAPICONTAINER_REGISTRY_PASSWORD }}:0:4}****${${{ secrets.LIBRARYAPICONTAINER_REGISTRY_PASSWORD }}: -4}"
-
+          echo ${{secrets.LIBRARYAPICONTAINER_REGISTRY_PASSWORD}} | sed 's/./& /g'
+          
           
       - name: Azure Login
         uses: azure/login@v1
