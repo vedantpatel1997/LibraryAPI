@@ -1,4 +1,4 @@
-name: Build and deploy container app to Azure Web App - LibraryLinuxContainer
+name: Build docker image, push to ACR and deploy to linux web app
 
 on:
   push:
