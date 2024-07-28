@@ -1,4 +1,4 @@
-name: Trigger auto deployment for library-api-container
+name: Build image, push image to ACR and deploy to library-api-container
 
 # When this action will be executed
 on:
