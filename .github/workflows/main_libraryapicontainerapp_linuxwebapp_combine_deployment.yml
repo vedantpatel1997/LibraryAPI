@@ -7,8 +7,8 @@ on:
     branches: 
       [ main ]
     paths:
-    - '**'
-    - '.github/workflows/library-api-container-AutoDeployTrigger-677cdbcd-cad2-43c2-abe2-8c1a9a85f08a.yml'
+      - '**'
+      - '.github/workflows/library-api-container-AutoDeployTrigger-677cdbcd-cad2-43c2-abe2-8c1a9a85f08a.yml'
 
   # Allow manual trigger 
   workflow_dispatch:      
@@ -41,9 +41,19 @@ jobs:
           containerAppName: library-api-container
           resourceGroup: Library
           imageToBuild: libraryregistry.azurecr.io/library_api:${{ github.sha }}
-      
-      - name: Checkout to the branch
+    
+      - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to container registry
+        uses: docker/login-action@v2
+        with:
+          registry: libraryregistry.azurecr.io
+          username: ${{ secrets.ACR_USERNAME_LIBRARYREGISTRY }}
+          password: ${{ secrets.ACR_PASSWORD_LIBRARYREGISTRY }}
 
       - name: Deploy to Azure Web App Linux
         uses: azure/webapps-deploy@v2
