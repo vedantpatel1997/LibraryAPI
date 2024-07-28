@@ -33,12 +33,5 @@ namespace LibraryManagement.API.Controllers
         }
 
 
-        [HttpGet("BreakApplication500Error")]
-        public Task<IActionResult> BreakApplication500Error()
-        {
-            // Simulate a 500 Internal Server Error
-            throw new Exception("Vedant's custom 500 error to check Auto Heal.");
-        }
-
     }
 }
