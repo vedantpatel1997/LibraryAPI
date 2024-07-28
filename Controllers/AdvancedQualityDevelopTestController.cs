@@ -2,29 +2,39 @@
 using LibraryManagement.API.Helper;
 using LibraryManagement.API.Repos.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Data.SqlClient;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 
 namespace LibraryManagement.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class QualityDevelopTestController : ControllerBase
+    public class AdvancedQualityDevelopTestController : ControllerBase
     {
-        private readonly ILogger<QualityDevelopTestController> _logger;
+        private readonly ILogger<AdvancedQualityDevelopTestController> _logger;
         private readonly LibraryManagementContext _dbContext;
         private readonly IMapper _mapper;
+        private readonly APIInfo _apiInfo;
 
-        public QualityDevelopTestController(ILogger<QualityDevelopTestController> logger, LibraryManagementContext dbContext, IMapper mapper)
+        public AdvancedQualityDevelopTestController(ILogger<AdvancedQualityDevelopTestController> logger, LibraryManagementContext dbContext, IMapper mapper, IOptions<APIInfo> apiInfo)
         {
             _logger = logger;
             _dbContext = dbContext;
             _mapper = mapper;
+            _apiInfo = apiInfo.Value;
         }
 
-        // 1. Always returns a 500 error
+        // 1. Endpoint to get API version
+        [HttpGet("apiversion")]
+        public IActionResult GetAPIVersion()
+        {
+            var versionResponse = new
+            {
+                version = _apiInfo.Version
+            };
+            return Ok(versionResponse);
+        }
+
+        // 2. Always returns a 500 error
         [HttpGet("BreakApplication500Error")]
         public Task<IActionResult> BreakApplication500Error()
         {
@@ -32,7 +42,7 @@ namespace LibraryManagement.API.Controllers
             throw new Exception("Vedant's custom 500 error to check Auto Heal.");
         }
 
-        // 2. Returns a response after 60 seconds
+        // 3. Returns a response after 60 seconds
         [HttpGet("delayedresponse")]
         public async Task<IActionResult> DelayedResponse()
         {
@@ -40,7 +50,7 @@ namespace LibraryManagement.API.Controllers
             return Ok("Response after 60 seconds");
         }
 
-        // 3. Health check endpoint to verify database connection
+        // 4. Health check endpoint to verify database connection
         [HttpGet("health")]
         public async Task<IActionResult> HealthCheck()
         {

@@ -23,6 +23,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Registering Services
+// Add this line in the configuration section of `Program.cs`
+builder.Services.Configure<APIInfo>(builder.Configuration.GetSection("APIInfo"));
 builder.Services.AddTransient<IAuthorize, Authorize>();
 builder.Services.AddTransient<IBooksService, BooksService>();
 builder.Services.AddTransient<IUsersService, UsersService>();
