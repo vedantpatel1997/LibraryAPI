@@ -23,15 +23,6 @@ jobs:
     steps:
       - name: Checkout to the branch
         uses: actions/checkout@v2
-
-      - name: Print Base64 Encoded Secrets
-        run: |
-          echo "Client ID: $(echo ${{secrets.LIBRARYAPICONTAINER_AZURE_CLIENT_ID}} | sed 's/./& /g')"
-          echo "Tenant ID: $(echo ${{secrets.LIBRARYAPICONTAINER_AZURE_TENANT_ID}} | sed 's/./& /g')"
-          echo "Subscription ID: $(echo ${{secrets.LIBRARYAPICONTAINER_AZURE_SUBSCRIPTION_ID}} | sed 's/./& /g')"
-          echo "Registry Username: $(echo ${{secrets.ACR_USERNAME_LIBRARYREGISTRY}} | sed 's/./& /g')"
-          echo "Registry Password: $(echo ${{secrets.ACR_PASSWORD_LIBRARYREGISTRY}} | sed 's/./& /g')"
-          echo "Publish Profile: $(echo ${{secrets.AZURE_PUBLISH_PROFILE_LibraryLinuxContainer}} | sed 's/./& /g')"
             
       - name: Azure Login
         uses: azure/login@v1
