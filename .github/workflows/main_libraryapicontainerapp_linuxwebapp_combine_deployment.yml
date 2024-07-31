@@ -1,54 +1,54 @@
-name: Build image, push image to ACR, deploy to library-api-container, deploy to linux web app
+# name: Build image, push image to ACR, deploy to library-api-container, deploy to linux web app
 
-# When this action will be executed
-on:
-  # Automatically trigger it when detected changes in repo
-  push:
-    branches: 
-      [ main ]
-    paths:
-    - '**'
-    - '.github/workflows/library-api-container-AutoDeployTrigger-677cdbcd-cad2-43c2-abe2-8c1a9a85f08a.yml'
+# # When this action will be executed
+# on:
+#   # Automatically trigger it when detected changes in repo
+#   push:
+#     branches: 
+#       [ main ]
+#     paths:
+#     - '**'
+#     - '.github/workflows/library-api-container-AutoDeployTrigger-677cdbcd-cad2-43c2-abe2-8c1a9a85f08a.yml'
 
-  # Allow manual trigger 
-  workflow_dispatch:      
+#   # Allow manual trigger 
+#   workflow_dispatch:      
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    permissions: 
-      id-token: write # This is required for requesting the OIDC JWT Token
-      contents: read # Required when GH token is used to authenticate with private repo
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
+#     permissions: 
+#       id-token: write # This is required for requesting the OIDC JWT Token
+#       contents: read # Required when GH token is used to authenticate with private repo
 
-    steps:
-      - name: Checkout to the branch
-        uses: actions/checkout@v2
+#     steps:
+#       - name: Checkout to the branch
+#         uses: actions/checkout@v2
             
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.LIBRARYAPICONTAINER_AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.LIBRARYAPICONTAINER_AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.LIBRARYAPICONTAINER_AZURE_SUBSCRIPTION_ID }}
+#       - name: Azure Login
+#         uses: azure/login@v1
+#         with:
+#           client-id: ${{ secrets.LIBRARYAPICONTAINER_AZURE_CLIENT_ID }}
+#           tenant-id: ${{ secrets.LIBRARYAPICONTAINER_AZURE_TENANT_ID }}
+#           subscription-id: ${{ secrets.LIBRARYAPICONTAINER_AZURE_SUBSCRIPTION_ID }}
 
-      - name: Build and push container image to registry
-        uses: azure/container-apps-deploy-action@v2
-        with:
-          appSourcePath: ${{ github.workspace }} 
-          registryUrl: libraryregistry.azurecr.io
-          registryUsername: ${{ secrets.ACR_USERNAME_LIBRARYREGISTRY }}
-          registryPassword: ${{ secrets.ACR_PASSWORD_LIBRARYREGISTRY }}
-          containerAppName: library-api-container
-          resourceGroup: Library
-          imageToBuild: libraryregistry.azurecr.io/library_api:${{ github.sha }}
+#       - name: Build and push container image to registry
+#         uses: azure/container-apps-deploy-action@v2
+#         with:
+#           appSourcePath: ${{ github.workspace }} 
+#           registryUrl: libraryregistry.azurecr.io
+#           registryUsername: ${{ secrets.ACR_USERNAME_LIBRARYREGISTRY }}
+#           registryPassword: ${{ secrets.ACR_PASSWORD_LIBRARYREGISTRY }}
+#           containerAppName: library-api-container
+#           resourceGroup: Library
+#           imageToBuild: libraryregistry.azurecr.io/library_api:${{ github.sha }}
     
-      - name: Checkout to the branch
-        uses: actions/checkout@v2
+#       - name: Checkout to the branch
+#         uses: actions/checkout@v2
 
-      - name: Deploy to Azure Web App Linux
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: 'LibraryLinuxContainer'
-          slot-name: 'production'
-          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_LibraryLinuxContainer }}
-          images: 'libraryregistry.azurecr.io/library_api:${{ github.sha }}'
+#       - name: Deploy to Azure Web App Linux
+#         uses: azure/webapps-deploy@v2
+#         with:
+#           app-name: 'LibraryLinuxContainer'
+#           slot-name: 'production'
+#           publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_LibraryLinuxContainer }}
+#           images: 'libraryregistry.azurecr.io/library_api:${{ github.sha }}'
