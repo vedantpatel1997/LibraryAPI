@@ -107,6 +107,7 @@ namespace LibraryManagement.API.Controllers
 
         private void CauseStackOverflow()
         {
+            Console.WriteLine("Segementation Fault triggered, Recursively call the method to cause a stack overflow. By Vedant Patel");
             CauseStackOverflow(); // Recursively call the method to cause a stack overflow
         }
 
