@@ -88,5 +88,27 @@ namespace LibraryManagement.API.Controllers
                 return StatusCode(500, healthResponse);
             }
         }
+
+        // 5. Endpoint to simulate a segmentation fault by triggering a StackOverflowException
+        [HttpGet("triggersegfault")]
+        public IActionResult TriggerSegFault()
+        {
+            try
+            {
+                CauseStackOverflow();
+            }
+            catch (StackOverflowException)
+            {
+                // This catch block won't be hit because the process will terminate
+            }
+
+            return Ok("This won't be reached.");
+        }
+
+        private void CauseStackOverflow()
+        {
+            CauseStackOverflow(); // Recursively call the method to cause a stack overflow
+        }
+
     }
 }
