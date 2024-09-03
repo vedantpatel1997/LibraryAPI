@@ -1,11 +1,10 @@
-#See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
+# Base image
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
-
+# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
@@ -15,21 +14,26 @@ COPY . .
 WORKDIR "/src/."
 RUN dotnet build "./LibraryManagement.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
+# Publish stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./LibraryManagement.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-COPY sshd_config /etc/ssh/
-
-# Start and enable SSH
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends dialog \
-    && apt-get install -y --no-install-recommends openssh-server \
-    && echo "root:Docker!" | chpasswd \
-    && chmod u+x /app/init_container.sh
-
+# Final image
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT [ "/app/init_container.sh" ] 
-#ENTRYPOINT ["dotnet", "LibraryManagement.API.dll"]
+
+# Install and configure SSH
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openssh-server && \
+    echo "root:Docker!" | chpasswd && \
+    mkdir /var/run/sshd && \
+    sed -i 's/^PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# Copy init script
+COPY init_container.sh /app/init_container.sh
+RUN chmod +x /app/init_container.sh
+
+ENTRYPOINT ["/app/init_container.sh"]
