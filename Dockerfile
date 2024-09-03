@@ -19,7 +19,17 @@ FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./LibraryManagement.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
+COPY sshd_config /etc/ssh/
+
+# Start and enable SSH
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends dialog \
+    && apt-get install -y --no-install-recommends openssh-server \
+    && echo "root:Docker!" | chpasswd \
+    && chmod u+x /app/init_container.sh
+
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "LibraryManagement.API.dll"]
+ENTRYPOINT [ "/app/init_container.sh" ] 
+#ENTRYPOINT ["dotnet", "LibraryManagement.API.dll"]
