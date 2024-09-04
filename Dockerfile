@@ -33,8 +33,6 @@
 
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
 
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
@@ -53,4 +51,17 @@ RUN dotnet publish "./LibraryManagement.API.csproj" -c $BUILD_CONFIGURATION -o /
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "LibraryManagement.API.dll"]
+
+COPY entrypoint.sh ./
+
+# Start and enable SSH
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends dialog \
+    && apt-get install -y --no-install-recommends openssh-server \
+    && echo "root:Docker!" | chpasswd \
+    && chmod u+x ./entrypoint.sh
+COPY sshd_config /etc/ssh/
+
+EXPOSE 80 443 2222
+
+ENTRYPOINT [ "./entrypoint.sh" ]
