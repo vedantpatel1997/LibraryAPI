@@ -7,6 +7,9 @@ eval $(printenv | sed -n "s/^\([^=]\+\)=\(.*\)$/export \1=\2/p" | sed 's/"/\\\"/
 echo "Starting SSH ..."
 service ssh start
 
+# Log the environment variables
+env
+
 echo "Starting application ..."
 # Start your .NET application
-#exec dotnet LibraryManagement.API.dll
+exec dotnet /app/publish/LibraryManagement.API.dll
