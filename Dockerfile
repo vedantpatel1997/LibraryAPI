@@ -2,8 +2,7 @@
 
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+
 
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
@@ -29,6 +28,6 @@ RUN apt-get update \
     && chmod u+x ./entrypoint.sh
 COPY sshd_config /etc/ssh/
 
-EXPOSE 8000 2222
+EXPOSE 8000 2222 80 443
 
 ENTRYPOINT [ "./entrypoint.sh" ]
