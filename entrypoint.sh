@@ -9,4 +9,4 @@ service ssh start
 
 echo "Starting application ..."
 # Start your .NET application
-exec dotnet LibraryManagement.API.dll
+#exec dotnet LibraryManagement.API.dll
