@@ -23,8 +23,9 @@ jobs:
       uses: docker/login-action@v2
       with:
         registry: https://libraryacr.azurecr.io/
-        username: ${{ secrets.AzureAppService_ContainerUsername_16d1ef3cd216445b8672a0912bc0fb28 }}
-        password: ${{ secrets.AzureAppService_ContainerPassword_c9f28e89a9264462bd0faa82910a1200 }}
+        client-id: ${{ secrets.DEMOVP_REGISTRY_CLIENTID }}
+        tenant-id: ${{ secrets.DEMOVP_REGISTRY_TENANT_ID }}
+        subscription-id: ${{ secrets.DEMOVP_REGISTRY_SUBSCRIPTION_ID }}
 
     - name: Build and push container image to registry
       uses: docker/build-push-action@v3
@@ -47,5 +48,7 @@ jobs:
       with:
         app-name: 'demovVP'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_775c17417aa74a9d88e7f702e71a9b2f }}
+        client-id: ${{ secrets.DEMOVP_REGISTRY_CLIENTID }}
+        tenant-id: ${{ secrets.DEMOVP_REGISTRY_TENANT_ID }}
+        subscription-id: ${{ secrets.DEMOVP_REGISTRY_SUBSCRIPTION_ID }}
         images: 'libraryacr.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_16d1ef3cd216445b8672a0912bc0fb28 }}/library-api-identity:${{ github.sha }}'
