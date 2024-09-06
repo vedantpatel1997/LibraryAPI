@@ -64,4 +64,4 @@ COPY entrypoint.sh ./
 
 EXPOSE 80 443 
 
-ENTRYPOINT [ "./entrypoint.sh" ]
+ENTRYPOINT ["dotnet", "LibraryManagement.API.dll"]
