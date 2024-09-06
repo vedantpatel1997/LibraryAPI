@@ -54,14 +54,14 @@ COPY --from=publish /app/publish .
 
 COPY entrypoint.sh ./
 
-# Start and enable SSH
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends dialog \
-    && apt-get install -y --no-install-recommends openssh-server \
-    && echo "root:Docker!" | chpasswd \
-    && chmod u+x ./entrypoint.sh
-COPY sshd_config /etc/ssh/
+## Start and enable SSH
+#RUN apt-get update \
+    #&& apt-get install -y --no-install-recommends dialog \
+    #&& apt-get install -y --no-install-recommends openssh-server \
+    #&& echo "root:Docker!" | chpasswd \
+    #&& chmod u+x ./entrypoint.sh
+#COPY sshd_config /etc/ssh/
 
-EXPOSE 80 443 2222
+EXPOSE 80 443 
 
 ENTRYPOINT [ "./entrypoint.sh" ]
