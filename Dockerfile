@@ -18,6 +18,21 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-ENTRYPOINT ["./entrypoint.sh"]
+# Start and enable SSH
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends dialog \
+    && apt-get install -y --no-install-recommends openssh-server \
+    && echo "root:Docker!" | chpasswd \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir /var/run/sshd \
+    && chmod 0755 /var/run/sshd
 
+# Copy the SSH configuration
+COPY sshd_config /etc/ssh/
+
+
+# Start SSH and the application
+CMD service ssh start && exec dotnet LibraryManagement.API.dll
+
+# Expose ports
 EXPOSE 80 443 2222
