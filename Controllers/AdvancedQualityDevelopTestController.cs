@@ -46,8 +46,8 @@ namespace LibraryManagement.API.Controllers
         [HttpGet("delayedresponse")]
         public async Task<IActionResult> DelayedResponse()
         {
-            await Task.Delay(60000); // 60 seconds delay
-            return Ok("Response after 60 seconds");
+            await Task.Delay(240000); // 60 seconds delay
+            return Ok("Response after 240 seconds");
         }
 
         // 4. Health check endpoint to verify database connection
