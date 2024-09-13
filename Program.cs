@@ -24,11 +24,7 @@ string keyVaultUrl = builder.Configuration["KeyVault:VaultUrl"];
 // Add Azure Key Vault secrets to configuration
 if (!string.IsNullOrEmpty(keyVaultUrl))
 {
-    var clientId = builder.Configuration["ClientId"];
-    var clientSecret = builder.Configuration["ClientSecret"];
-    var tenantId = builder.Configuration["TenantId"];
-
-    var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+    var credential = new DefaultAzureCredential();
     // Use DefaultAzureCredential to handle authentication automatically
 
     builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
@@ -51,7 +47,13 @@ builder.Services.AddTransient<IEmailMessageService, EmailMessageService>();
 builder.Services.AddTransient<ICategoryService, CategoryService>();
 builder.Services.AddTransient<IPasswordHasher, PasswordHasher>();
 builder.Services.AddTransient<IBooksUsersTransactions, BooksUsersTransactions>();
-builder.Services.AddDbContext<LibraryManagementContext>(o => o.UseSqlServer(builder.Configuration.GetConnectionString("APIConnection")));
+
+// Register DbContext with connection string from Key Vault
+builder.Services.AddDbContext<LibraryManagementContext>(options =>
+{
+    var connectionString = builder.Configuration["APIConnection"];
+    options.UseSqlServer(connectionString);
+});
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
