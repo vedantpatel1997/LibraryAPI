@@ -11,9 +11,28 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
-
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+// Retrieve the Key Vault URL from appsettings or environment variable
+string keyVaultUrl = builder.Configuration["KeyVault:VaultUrl"];
+
+// Add Azure Key Vault secrets to configuration
+if (!string.IsNullOrEmpty(keyVaultUrl))
+{
+    var clientId = builder.Configuration["AzureAd:ClientId"];
+    var clientSecret = builder.Configuration["AzureAd:ClientSecret"];
+    var tenantId = builder.Configuration["AzureAd:TenantId"];
+
+    var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+    // Use DefaultAzureCredential to handle authentication automatically
+
+    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
+}
 
 // Add services to the container.
 
