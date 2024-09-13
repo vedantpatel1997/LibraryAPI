@@ -61,7 +61,6 @@ builder.Services.AddControllers()
     });
 
 
-
 // JWT Authorization
 var authKey = builder.Configuration.GetValue<string>("JWTSettings:securityKey");
 builder.Services.AddAuthentication(item =>
