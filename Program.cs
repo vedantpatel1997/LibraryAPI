@@ -24,9 +24,9 @@ string keyVaultUrl = builder.Configuration["KeyVault:VaultUrl"];
 // Add Azure Key Vault secrets to configuration
 if (!string.IsNullOrEmpty(keyVaultUrl))
 {
-    var clientId = builder.Configuration["AzureAd:ClientId"];
-    var clientSecret = builder.Configuration["AzureAd:ClientSecret"];
-    var tenantId = builder.Configuration["AzureAd:TenantId"];
+    var clientId = builder.Configuration["ClientId"];
+    var clientSecret = builder.Configuration["ClientSecret"];
+    var tenantId = builder.Configuration["TenantId"];
 
     var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
     // Use DefaultAzureCredential to handle authentication automatically
