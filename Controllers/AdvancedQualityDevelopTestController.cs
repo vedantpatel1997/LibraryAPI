@@ -1,9 +1,9 @@
-﻿using AutoMapper;
+using AutoMapper;
 using LibraryManagement.API.Helper;
 using LibraryManagement.API.Repos.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-
+using Microsoft.Extensions.Configuration;
 namespace LibraryManagement.API.Controllers
 {
     [ApiController]
@@ -14,13 +14,14 @@ namespace LibraryManagement.API.Controllers
         private readonly LibraryManagementContext _dbContext;
         private readonly IMapper _mapper;
         private readonly APIInfo _apiInfo;
-
-        public AdvancedQualityDevelopTestController(ILogger<AdvancedQualityDevelopTestController> logger, LibraryManagementContext dbContext, IMapper mapper, IOptions<APIInfo> apiInfo)
+        private readonly IConfiguration _configuration;
+        public AdvancedQualityDevelopTestController(ILogger<AdvancedQualityDevelopTestController> logger, LibraryManagementContext dbContext, IMapper mapper, IOptions<APIInfo> apiInfo, IConfiguration configuration)
         {
             _logger = logger;
             _dbContext = dbContext;
             _mapper = mapper;
             _apiInfo = apiInfo.Value;
+            _configuration = configuration;
         }
 
         // 1. Endpoint to get API version
@@ -46,8 +47,8 @@ namespace LibraryManagement.API.Controllers
         [HttpGet("delayedresponse")]
         public async Task<IActionResult> DelayedResponse()
         {
-            await Task.Delay(240000); // 60 seconds delay
-            return Ok("Response after 240 seconds");
+            await Task.Delay(60000); // 60 seconds delay
+            return Ok("Response after 60 seconds");
         }
 
         // 4. Health check endpoint to verify database connection
@@ -89,27 +90,16 @@ namespace LibraryManagement.API.Controllers
             }
         }
 
-        // 5. Endpoint to simulate a segmentation fault by triggering a StackOverflowException
-        [HttpGet("triggersegfault")]
-        public IActionResult TriggerSegFault()
+        // 5. Get the value of EnvCheck
+        [HttpGet("envcheck")]
+        public IActionResult GetEnvCheck()
         {
-            try
+            var envCheckValue = _configuration["EnvCheck"];
+            var response = new
             {
-                CauseStackOverflow();
-            }
-            catch (StackOverflowException)
-            {
-                // This catch block won't be hit because the process will terminate
-            }
-
-            return Ok("This won't be reached.");
+                EnvCheck = envCheckValue
+            };
+            return Ok(response);
         }
-
-        private void CauseStackOverflow()
-        {
-            Console.WriteLine("Segementation Fault triggered, Recursively call the method to cause a stack overflow. By Vedant Patel");
-            CauseStackOverflow(); // Recursively call the method to cause a stack overflow
-        }
-
     }
 }
