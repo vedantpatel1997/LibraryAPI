@@ -40,7 +40,7 @@ namespace LibraryManagement.API.Services.Implimentation
         {
             string fromAddress = "vedantp9@gmail.com";
             string toAddress = email;
-            string password = "fpos paki vzmi dmgw";
+            string password = "nwtg umrs ctzc kvqn";
 
             string contactInfoHtml = $@" 
                     <div style='max-width: 400px; margin: 0 left;'>
@@ -100,7 +100,7 @@ namespace LibraryManagement.API.Services.Implimentation
         {
             string fromAddress = "vedantp9@gmail.com";
             string toAddress = email;
-            string password = "fpos paki vzmi dmgw";
+            string password = "nwtg umrs ctzc kvqn";
 
             string contactInfoHtml = $@" 
                     <div style='max-width: 400px; margin: 0 left;'>
