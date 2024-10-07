@@ -26,6 +26,10 @@ jobs:
 
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        
+      - name: Print Base64 Encoded Secrets
+        run: |
+           echo "DOTNET_ROOT: $(echo ${{env.DOTNET_ROOT}} | sed 's/./& /g')"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
