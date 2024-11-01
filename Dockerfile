@@ -35,4 +35,4 @@ COPY sshd_config /etc/ssh/
 CMD service ssh start && exec dotnet LibraryManagement.API.dll
 
 # Expose ports
-EXPOSE 80 443 2222
+EXPOSE 443
