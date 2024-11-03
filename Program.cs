@@ -104,7 +104,15 @@ builder.Services.AddCors(options =>
 var jwtSettings = builder.Configuration.GetSection("JWTSettings");
 builder.Services.Configure<JWTSettings>(jwtSettings);
 
+
+// Configure Kestrel to listen on port 443
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(443); // Bind to port 443
+});
+
 var app = builder.Build();
+
 
 app.UseSwagger();
 app.UseSwaggerUI();
