@@ -32,6 +32,7 @@ namespace LibraryManagement.API.Controllers
             {
                 version = _apiInfo.Version
             };
+            Console.WriteLine("Here is the API version, printing in the stdout VP.");
             return Ok(versionResponse);
         }
 
