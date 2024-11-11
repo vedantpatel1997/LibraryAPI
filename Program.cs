@@ -30,7 +30,7 @@ if (!string.IsNullOrEmpty(keyVaultUrl))
     builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
 }
 
-builder.WebHost.UseUrls("http://0.0.0.0:8080");
+builder.WebHost.UseUrls("http://0.0.0.0:80");
 
 // Add services to the container.
 
@@ -106,12 +106,6 @@ builder.Services.AddCors(options =>
 var jwtSettings = builder.Configuration.GetSection("JWTSettings");
 builder.Services.Configure<JWTSettings>(jwtSettings);
 
-
-// Configure Kestrel to listen on port 443
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ListenAnyIP(443); // Bind to port 443
-});
 
 var app = builder.Build();
 
