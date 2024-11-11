@@ -25,6 +25,21 @@ RUN dotnet publish "./LibraryManagement.API.csproj" -c $BUILD_CONFIGURATION -o /
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "LibraryManagement.API.dll"]
 
-EXPOSE 80
+# Start and enable SSH
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends dialog \
+    && apt-get install -y --no-install-recommends openssh-server \
+    && echo "root:Docker!" | chpasswd \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir /var/run/sshd \
+    && chmod 0755 /var/run/sshd
+
+# Copy the SSH configuration
+COPY sshd_config /etc/ssh/
+
+
+# Start SSH and the application
+CMD service ssh start && exec dotnet LibraryManagement.API.dll
+
+EXPOSE 80 2222
