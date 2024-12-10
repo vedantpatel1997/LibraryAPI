@@ -107,7 +107,7 @@ builder.Services.Configure<JWTSettings>(jwtSettings);
 
 var app = builder.Build();
 
-//app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 
 app.UseSwagger();

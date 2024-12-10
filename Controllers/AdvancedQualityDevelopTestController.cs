@@ -104,58 +104,60 @@ namespace LibraryManagement.API.Controllers
         }
 
         // 6. Cancellation tocken concept
-        [HttpGet("long-running-operation")]
-        public async Task StreamResponse(CancellationToken cancellationToken)
-        {
-            Response.ContentType = "text/event-stream";  // Set response type for SSE
+        //[HttpGet("long-running-operation")]
+        //public async Task StreamResponse(CancellationToken cancellationToken)
+        //{
+        //    Response.ContentType = "text/event-stream";  // Set response type for SSE
 
-            _logger.LogInformation("StreamResponse started at {Timestamp}", DateTime.UtcNow);
+        //    _logger.LogInformation("StreamResponse started at {Timestamp}", DateTime.UtcNow);
 
-            try
-            {
-                for (int i = 0; i < 5; i++)
-                {
-                    // Simulate processing time
-                    await Task.Delay(1000, cancellationToken); // 1-second delay per step
+        //    try
+        //    {
+        //        for (int i = 0; i < 5; i++)
+        //        {
+        //            // Simulate processing time
+        //            await Task.Delay(1000, cancellationToken); // 1-second delay per step
 
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        _logger.LogWarning("StreamResponse was canceled by the client at step {Step} at {Timestamp}", i + 1, DateTime.UtcNow);
-                        await Response.WriteAsync("data: Request was canceled\n\n");
-                        await Response.Body.FlushAsync();
-                        return;
-                    }
+        //            if (cancellationToken.IsCancellationRequested)
+        //            {
+        //                _logger.LogWarning("StreamResponse was canceled by the client at step {Step} at {Timestamp}", i + 1, DateTime.UtcNow);
+        //                await Response.WriteAsync("data: Request was canceled\n\n");
+        //                await Response.Body.FlushAsync();
+        //                return;
+        //            }
 
-                    // Log progress
-                    _logger.LogInformation("Step {Step}/5 completed at {Timestamp}", i + 1, DateTime.UtcNow);
+        //            // Log progress
+        //            _logger.LogInformation("Step {Step}/5 completed at {Timestamp}", i + 1, DateTime.UtcNow);
 
-                    // Send each part of the response to the client as soon as it's processed
-                    await Response.WriteAsync($"data: Step {i + 1}/5 is done\n\n");
-                    await Response.Body.FlushAsync();
-                }
+        //            // Send each part of the response to the client as soon as it's processed
+        //            await Response.WriteAsync($"data: Step {i + 1}/5 is done\n\n");
+        //            await Response.Body.FlushAsync();
+        //        }
 
-                // Log completion
-                _logger.LogInformation("StreamResponse completed successfully at {Timestamp}", DateTime.UtcNow);
+        //        // Log completion
+        //        _logger.LogInformation("StreamResponse completed successfully at {Timestamp}", DateTime.UtcNow);
 
-                // Final response when processing is done
-                await Response.WriteAsync("data: Processing complete!\n\n");
-                await Response.Body.FlushAsync();
-            }
-            catch (Exception ex)
-            {
-                // Log any errors
-                _logger.LogError(ex, "An error occurred while processing StreamResponse at {Timestamp}", DateTime.UtcNow);
+        //        // Final response when processing is done
+        //        await Response.WriteAsync("data: Processing complete!\n\n");
+        //        await Response.Body.FlushAsync();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Log any errors
+        //        _logger.LogError(ex, "An error occurred while processing StreamResponse at {Timestamp}", DateTime.UtcNow);
 
-                // Send error message to the client
-                await Response.WriteAsync($"data: An error occurred: {ex.Message}\n\n");
-                await Response.Body.FlushAsync();
-            }
-        }
+        //        // Send error message to the client
+        //        await Response.WriteAsync($"data: An error occurred: {ex.Message}\n\n");
+        //        await Response.Body.FlushAsync();
+        //    }
+        //}
+
+        //[HttpGet("long-running-operation")]
 
         //public async Task<IActionResult> LongRunningOperation()
         //{
-        //   // Retrieve cancellation token from HttpContext
-        //   var cancellationToken = HttpContext.Items["CancellationToken"] as CancellationToken? ?? HttpContext.RequestAborted;
+        //    // Retrieve cancellation token from HttpContext
+        //    var cancellationToken = HttpContext.Items["CancellationToken"] as CancellationToken? ?? HttpContext.RequestAborted;
 
 
         //    int iterations = 10;
@@ -179,5 +181,74 @@ namespace LibraryManagement.API.Controllers
         //    //    return StatusCode(499, "Request canceled by the client.");
         //    //}
         //}
+
+        [HttpGet("long-running-operation")]
+        public async Task<IActionResult> LongRunningOperation(CancellationToken cancellationToken)
+        {
+            int iterations = 10; // Number of iterations for the long-running operation
+            for (int i = 0; i < iterations; i++)
+            {
+                // Check if the request has been canceled
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    Console.WriteLine($"Request was canceled in iteration {i + 1}.");
+                    return StatusCode(499, "Request canceled by the client."); // 499: Client Closed Request
+                }
+
+                Console.WriteLine($"Iteration {i + 1} of {iterations}... (Server is processing)");
+
+                // Simulate some work with a delay
+                try
+                {
+                    await Task.Delay(1000, cancellationToken);
+                }
+                catch (TaskCanceledException)
+                {
+                    Console.WriteLine($"TaskCanceledException caught in iteration {i + 1}.");
+                    return StatusCode(499, "Request canceled by the client.");
+                }
+            }
+
+            Console.WriteLine("Operation completed successfully.");
+            return Ok("Operation completed successfully.");
+        }
+
+        [HttpPost("long-running-operation-post")]
+        public async Task<IActionResult> LongRunningOperation([FromBody] SomeRequestData requestData, CancellationToken cancellationToken)
+        {
+            int iterations = 10; // Number of iterations for the long-running operation
+            for (int i = 0; i < iterations; i++)
+            {
+                // Check if the request has been canceled
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    Console.WriteLine($"Request was canceled in iteration {i + 1}.");
+                    return StatusCode(499, "Request canceled by the client."); // 499: Client Closed Request
+                }
+
+                Console.WriteLine($"Iteration {i + 1} of {iterations}... (Server is processing)");
+
+                // Simulate some work with a delay
+                try
+                {
+                    await Task.Delay(1000, cancellationToken);
+                }
+                catch (TaskCanceledException)
+                {
+                    Console.WriteLine($"TaskCanceledException caught in iteration {i + 1}.");
+                    return StatusCode(499, "Request canceled by the client.");
+                }
+            }
+
+            Console.WriteLine("Operation completed successfully.");
+            return Ok("Operation completed successfully.");
+        }
+    }
+
+    // Example Request Data Class for POST body (you can adjust as needed)
+    public class SomeRequestData
+    {
+        public string Name { get; set; }
+        public int Number { get; set; }
     }
 }
