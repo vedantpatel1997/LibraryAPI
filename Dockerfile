@@ -42,4 +42,4 @@ COPY sshd_config /etc/ssh/
 # Start SSH and the application
 CMD service ssh start && exec dotnet LibraryManagement.API.dll
 
-EXPOSE 80 2222
+EXPOSE 8080 2222

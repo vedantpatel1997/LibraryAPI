@@ -30,8 +30,6 @@ if (!string.IsNullOrEmpty(keyVaultUrl))
     builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
 }
 
-builder.WebHost.UseUrls("http://0.0.0.0:80");
-
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -108,6 +106,8 @@ builder.Services.Configure<JWTSettings>(jwtSettings);
 
 
 var app = builder.Build();
+
+//app.UseMiddleware<GlobalExceptionMiddleware>();
 
 
 app.UseSwagger();
