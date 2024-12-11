@@ -223,6 +223,7 @@ namespace LibraryManagement.API.Controllers
                 if (cancellationToken.IsCancellationRequested)
                 {
                     Console.WriteLine($"Request was canceled in iteration {i + 1}.");
+                    Console.WriteLine($"IsCancellationRequested: {cancellationToken.IsCancellationRequested}.");
                     return StatusCode(499, "Request canceled by the client."); // 499: Client Closed Request
                 }
 
@@ -236,6 +237,7 @@ namespace LibraryManagement.API.Controllers
                 catch (TaskCanceledException)
                 {
                     Console.WriteLine($"TaskCanceledException caught in iteration {i + 1}.");
+                    Console.WriteLine($"IsCancellationRequested: {cancellationToken.IsCancellationRequested}.");
                     return StatusCode(499, "Request canceled by the client.");
                 }
             }
