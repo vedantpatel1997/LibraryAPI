@@ -9,6 +9,7 @@ using LibraryManagement.API.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Data.SqlClient;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Azure.Identity;
@@ -19,16 +20,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 // Retrieve the Key Vault URL from appsettings or environment variable
-string keyVaultUrl = builder.Configuration["KeyVault:VaultUrl"];
+//string keyVaultUrl = builder.Configuration["KeyVault:VaultUrl"];
 
 // Add Azure Key Vault secrets to configuration
-if (!string.IsNullOrEmpty(keyVaultUrl))
-{
-    var credential = new DefaultAzureCredential();
-    // Use DefaultAzureCredential to handle authentication automatically
+//if (!string.IsNullOrEmpty(keyVaultUrl))
+//{
+//    var credential = new DefaultAzureCredential();
+//    // Use DefaultAzureCredential to handle authentication automatically
 
-    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
-}
+//    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
+//}
 
 // Add services to the container.
 
@@ -47,13 +48,16 @@ builder.Services.AddTransient<IEmailMessageService, EmailMessageService>();
 builder.Services.AddTransient<ICategoryService, CategoryService>();
 builder.Services.AddTransient<IPasswordHasher, PasswordHasher>();
 builder.Services.AddTransient<IBooksUsersTransactions, BooksUsersTransactions>();
+builder.Services.AddSingleton<ConnectionStringService>();
 
-// Register DbContext with connection string from Key Vault
-builder.Services.AddDbContext<LibraryManagementContext>(options =>
+//Modify DbContext to Use the Dynamic Connection String
+builder.Services.AddDbContext<LibraryManagementContext>((serviceProvider, options) =>
 {
-    var connectionString = builder.Configuration["APIConnection"];
-    options.UseSqlServer(connectionString);
+    var connectionStringService = serviceProvider.GetRequiredService<ConnectionStringService>();
+    options.UseSqlServer(connectionStringService.GetConnectionString());
 });
+
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -95,16 +99,20 @@ builder.Services.AddCors(options =>
         builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
     });
 
-    options.AddPolicy("corsPolicy", builder =>
-    {
-        builder.WithOrigins("https://libraryconestoga.netlify.app").AllowAnyMethod().AllowAnyHeader();
-    });
+    //options.AddPolicy("corsPolicy", builder =>
+    //{
+    //    builder.WithOrigins("https://libraryconestoga.netlify.app").AllowAnyMethod().AllowAnyHeader();
+    //});
 });
 
 var jwtSettings = builder.Configuration.GetSection("JWTSettings");
 builder.Services.Configure<JWTSettings>(jwtSettings);
 
+
 var app = builder.Build();
+
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 
 app.UseSwagger();
 app.UseSwaggerUI();

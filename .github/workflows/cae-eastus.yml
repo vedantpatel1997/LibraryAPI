@@ -1,0 +1,47 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build docker image and deploy to ACR and Azure Web App - library-backend-api
+
+on:
+  push:
+    branches:
+      - ACA
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+    
+jobs:
+  build:
+    runs-on: 'ubuntu-latest'
+    environment:
+      name: 'production'
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: 'Login to ACR using UAMI'
+      uses: azure/login@v2
+      with:
+         client-id: ${{ secrets.UAMI_CLIENT_ID_INTERNAL_SUB }}
+         tenant-id: ${{ secrets.UAMI_TENANT_ID_INTERNAL_SUB }}
+         subscription-id: ${{ secrets.UAMI_SUBSCRIPTION_ID_INTERNAL_SUB }}
+
+    - name: Login to ACR and Verify
+      run: |
+        az acr login --name libraryregistryvp
+        if [ $? -ne 0 ]; then
+          echo "ACR login failed" && exit 1
+        fi
+
+    - name: Build and push container image to registry
+      run: | 
+        docker build --cache-from=type=registry,ref=libraryregistryvp.azurecr.io/library-backend:latest \
+          -t libraryregistryvp.azurecr.io/library-backend:${{ github.sha }} \
+          -t libraryregistryvp.azurecr.io/library-backend:latest .
+        docker push libraryregistryvp.azurecr.io/library-backend:${{ github.sha }}
+        docker push libraryregistryvp.azurecr.io/library-backend:latest

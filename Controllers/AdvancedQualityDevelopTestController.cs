@@ -1,27 +1,31 @@
 using AutoMapper;
 using LibraryManagement.API.Helper;
+using LibraryManagement.API.Modal;
 using LibraryManagement.API.Repos.Models;
+using LibraryManagement.API.Services.Implimentation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Configuration;
 namespace LibraryManagement.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class AdvancedQualityDevelopTestController : ControllerBase
     {
+        private readonly ConnectionStringService _connectionStringService;
         private readonly ILogger<AdvancedQualityDevelopTestController> _logger;
         private readonly LibraryManagementContext _dbContext;
         private readonly IMapper _mapper;
         private readonly APIInfo _apiInfo;
         private readonly IConfiguration _configuration;
-        public AdvancedQualityDevelopTestController(ILogger<AdvancedQualityDevelopTestController> logger, LibraryManagementContext dbContext, IMapper mapper, IOptions<APIInfo> apiInfo, IConfiguration configuration)
+        public AdvancedQualityDevelopTestController(ILogger<AdvancedQualityDevelopTestController> logger, LibraryManagementContext dbContext, IMapper mapper, IOptions<APIInfo> apiInfo, IConfiguration configuration, ConnectionStringService connectionStringService)
         {
             _logger = logger;
             _dbContext = dbContext;
             _mapper = mapper;
             _apiInfo = apiInfo.Value;
             _configuration = configuration;
+            _connectionStringService = connectionStringService;
         }
 
         // 1. Endpoint to get API version
@@ -30,8 +34,11 @@ namespace LibraryManagement.API.Controllers
         {
             var versionResponse = new
             {
-                version = _apiInfo.Version
+                version = _apiInfo.Version,
+                gitHubRepo = "https://github.com/vedantpatel1997/LibraryAPI"
+
             };
+            Console.WriteLine("Here is the API version, printing in the stdout VP.");
             return Ok(versionResponse);
         }
 
@@ -92,15 +99,254 @@ namespace LibraryManagement.API.Controllers
         }
 
         // 5. Get the value of EnvCheck
-        [HttpGet("envcheck")]
-        public IActionResult GetEnvCheck()
+        [HttpPost("SwitchDatabase")]
+        public IActionResult SwitchDatabase([FromBody] SwitchDatabaseRequest request)
         {
-            var envCheckValue = _configuration["EnvCheck"];
-            var response = new
+            var response = new APIResponse<string>();
+            Console.WriteLine("SwitchDatabase request received");
+
+            // Validate input
+            if (request?.DbKey != "old" && request?.DbKey != "new")
             {
-                EnvCheck = envCheckValue
-            };
-            return Ok(response);
+                response.ResponseCode = 400;
+                response.IsSuccess = false;
+                response.ErrorMessage = "Invalid database key. Valid keys are 'old' or 'new'.";
+                Console.WriteLine($"Invalid DbKey received: {request?.DbKey}");
+                return BadRequest(response);
+            }
+
+            // Save the CURRENT DB KEY (not the raw connection string)
+            var previousDbKey = _connectionStringService.GetCurrentDbKey();
+
+            try
+            {
+                // Switch to the new database
+                _connectionStringService.SetConnectionString(request.DbKey);
+
+                // Test the new connection
+                var connectionString = _connectionStringService.GetConnectionString();
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                }
+
+                // Success response
+                response.ResponseCode = 200;
+                response.IsSuccess = true;
+                response.Data = $"Switched to {request.DbKey} database.";
+                Console.WriteLine($"Successfully switched to {request.DbKey} database.");
+                return Ok(response);
+            }
+            catch (SqlException ex)
+            {
+                // Revert to the PREVIOUS DB KEY
+                Console.WriteLine($"Reverting to previous database key: {previousDbKey}");
+                _connectionStringService.SetConnectionString(previousDbKey);
+
+                response.ResponseCode = 500;
+                response.IsSuccess = false;
+                response.ErrorMessage = $"Database connection failed. Reverted to {previousDbKey}.";
+                return StatusCode(500, response);
+            }
+            catch (Exception ex)
+            {
+                // Revert to the PREVIOUS DB KEY
+                Console.WriteLine($"Reverting to previous database key: {previousDbKey}");
+                _connectionStringService.SetConnectionString(previousDbKey);
+
+                response.ResponseCode = 500;
+                response.IsSuccess = false;
+                response.ErrorMessage = $"Unexpected error. Reverted to {previousDbKey}.";
+                return StatusCode(500, response);
+            }
         }
+
+        [HttpGet("GetCurrentDatabase")]
+        public IActionResult GetCurrentDatabase()
+        {
+            var response = new APIResponse<bool>();
+            try
+            {
+                // Get the current database key ("old" or "new")
+                var currentDbKey = _connectionStringService.GetCurrentDbKey();
+
+                // Determine if the current database is "new"
+                bool databaseIsNew = currentDbKey == "new";
+
+                response.ResponseCode = 200;
+                response.IsSuccess = true;
+                response.Data = databaseIsNew;
+                Console.WriteLine($"Current database is {(databaseIsNew ? "new" : "old")}.");
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.ResponseCode = 500;
+                response.IsSuccess = false;
+                response.ErrorMessage = "Failed to retrieve the current database.";
+                Console.WriteLine($"Error retrieving current database: {ex.Message}");
+
+                return StatusCode(500, response);
+            }
+        }
+
+
+
+        // Add a model to represent the request body
+        public class SwitchDatabaseRequest
+        {
+            public string DbKey { get; set; }
+        }
+
+        // 6. Cancellation tocken concept
+        //[HttpGet("long-running-operation")]
+        //public async Task StreamResponse(CancellationToken cancellationToken)
+        //{
+        //    Response.ContentType = "text/event-stream";  // Set response type for SSE
+
+        //    _logger.LogInformation("StreamResponse started at {Timestamp}", DateTime.UtcNow);
+
+        //    try
+        //    {
+        //        for (int i = 0; i < 5; i++)
+        //        {
+        //            // Simulate processing time
+        //            await Task.Delay(1000, cancellationToken); // 1-second delay per step
+
+        //            if (cancellationToken.IsCancellationRequested)
+        //            {
+        //                _logger.LogWarning("StreamResponse was canceled by the client at step {Step} at {Timestamp}", i + 1, DateTime.UtcNow);
+        //                await Response.WriteAsync("data: Request was canceled\n\n");
+        //                await Response.Body.FlushAsync();
+        //                return;
+        //            }
+
+        //            // Log progress
+        //            _logger.LogInformation("Step {Step}/5 completed at {Timestamp}", i + 1, DateTime.UtcNow);
+
+        //            // Send each part of the response to the client as soon as it's processed
+        //            await Response.WriteAsync($"data: Step {i + 1}/5 is done\n\n");
+        //            await Response.Body.FlushAsync();
+        //        }
+
+        //        // Log completion
+        //        _logger.LogInformation("StreamResponse completed successfully at {Timestamp}", DateTime.UtcNow);
+
+        //        // Final response when processing is done
+        //        await Response.WriteAsync("data: Processing complete!\n\n");
+        //        await Response.Body.FlushAsync();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Log any errors
+        //        _logger.LogError(ex, "An error occurred while processing StreamResponse at {Timestamp}", DateTime.UtcNow);
+
+        //        // Send error message to the client
+        //        await Response.WriteAsync($"data: An error occurred: {ex.Message}\n\n");
+        //        await Response.Body.FlushAsync();
+        //    }
+        //}
+
+        //[HttpGet("long-running-operation")]
+
+        //public async Task<IActionResult> LongRunningOperation()
+        //{
+        //    // Retrieve cancellation token from HttpContext
+        //    var cancellationToken = HttpContext.Items["CancellationToken"] as CancellationToken? ?? HttpContext.RequestAborted;
+
+
+        //    int iterations = 10;
+        //    for (int i = 0; i < iterations; i++)
+        //    {
+        //        if (cancellationToken.IsCancellationRequested)
+        //        {
+        //            Console.WriteLine("Request was canceled in iteration.");
+        //            return StatusCode(499, "Request canceled by the client.");
+        //        }
+
+        //        Console.WriteLine($"Iteration {i + 1} of {iterations}...");
+        //        await Task.Delay(1000, cancellationToken);
+        //    }
+
+        //    return Ok("Operation completed successfully.");
+
+        //    //catch (TaskCanceledException)
+        //    //{
+        //    //    Console.WriteLine("Request was canceled.");
+        //    //    return StatusCode(499, "Request canceled by the client.");
+        //    //}
+        //}
+
+        [HttpGet("long-running-operation")]
+        public async Task<IActionResult> LongRunningOperation(CancellationToken cancellationToken)
+        {
+            int iterations = 10; // Number of iterations for the long-running operation
+            for (int i = 0; i < iterations; i++)
+            {
+                // Check if the request has been canceled
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    Console.WriteLine($"Request was canceled in iteration {i + 1}.");
+                    return StatusCode(499, "Request canceled by the client."); // 499: Client Closed Request
+                }
+
+                Console.WriteLine($"Iteration {i + 1} of {iterations}... (Server is processing)");
+
+                // Simulate some work with a delay
+                try
+                {
+                    await Task.Delay(1000, cancellationToken);
+                }
+                catch (TaskCanceledException)
+                {
+                    Console.WriteLine($"TaskCanceledException caught in iteration {i + 1}.");
+                    return StatusCode(499, "Request canceled by the client.");
+                }
+            }
+
+            Console.WriteLine("Operation completed successfully.");
+            return Ok("Operation completed successfully.");
+        }
+
+        [HttpPost("long-running-operation-post")]
+        public async Task<IActionResult> LongRunningOperation([FromBody] SomeRequestData requestData, CancellationToken cancellationToken)
+        {
+            int iterations = 10; // Number of iterations for the long-running operation
+            for (int i = 0; i < iterations; i++)
+            {
+                // Check if the request has been canceled
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    Console.WriteLine($"Request was canceled in iteration {i + 1}.");
+                    Console.WriteLine($"IsCancellationRequested: {cancellationToken.IsCancellationRequested}.");
+                    return StatusCode(499, "Request canceled by the client."); // 499: Client Closed Request
+                }
+
+                Console.WriteLine($"Iteration {i + 1} of {iterations}... (Server is processing)");
+
+                // Simulate some work with a delay
+                try
+                {
+                    await Task.Delay(1000, cancellationToken);
+                }
+                catch (TaskCanceledException)
+                {
+                    Console.WriteLine($"TaskCanceledException caught in iteration {i + 1}.");
+                    Console.WriteLine($"IsCancellationRequested: {cancellationToken.IsCancellationRequested}.");
+                    return StatusCode(499, "Request canceled by the client.");
+                }
+            }
+
+            Console.WriteLine("Operation completed successfully.");
+            return Ok("Operation completed successfully.");
+        }
+    }
+
+    // Example Request Data Class for POST body (you can adjust as needed)
+    public class SomeRequestData
+    {
+        public string Name { get; set; }
+        public int Number { get; set; }
     }
 }

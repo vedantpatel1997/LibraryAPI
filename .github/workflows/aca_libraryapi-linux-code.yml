@@ -6,7 +6,7 @@ name: Build and deploy ASP.Net Core app to Azure Web App - LibraryAPI-Linux-Code
 on:
   push:
     branches:
-      - main
+      - ACA
   workflow_dispatch:
 
 jobs:
@@ -19,17 +19,13 @@ jobs:
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '7.x'
+          dotnet-version: '8.x'
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
-        
-      - name: Print Base64 Encoded Secrets
-        run: |
-           echo "DOTNET_ROOT: $(echo ${{env.DOTNET_ROOT}} | sed 's/./& /g')"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -43,13 +39,22 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    
+    permissions:
+      id-token: write #This is required for requesting the JWT
+
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: .net-app
       
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_6C869CC447EC42CC8441D9274CF5A306 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_11B7DDA8A594480FAFE42B4050B99047 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C30C6031E31742CCA32BEC6A0ACB9EE7 }}
+
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
@@ -57,4 +62,4 @@ jobs:
           app-name: 'LibraryAPI-Linux-Code'
           slot-name: 'Production'
           package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_LibraryAPILinuxCode }}
+          

@@ -1,17 +1,17 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy ASP.Net Core app to Azure Web App - libraryapi-linux-code
+name: Build and deploy ASP.Net Core app to Azure Web App - Net8DemoVP
 
 on:
   push:
     branches:
-      - main
+      - ACA
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -19,13 +19,13 @@ jobs:
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '7.x'
+          dotnet-version: '8.x'
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -34,10 +34,10 @@ jobs:
           path: ${{env.DOTNET_ROOT}}/myapp
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs: build
     environment:
-      name: 'stagging'
+      name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
       id-token: write #This is required for requesting the JWT
@@ -51,15 +51,15 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_45DD6599CDD54061972A6D2E5D2B72FF }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A51116EE042346BB897E7DFDF931195F }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_D3A6787BB1144F15B78CF03B5FA72917 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_BB4078CEE854412B8E1124B43B8B202B }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_272B5BFBCF0147C083EA283300FA3C08 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5CDF25A0984A4020B63E622D1C5737A5 }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'libraryapi-linux-code'
-          slot-name: 'stagging'
+          app-name: 'Net8DemoVP'
+          slot-name: 'Production'
           package: .
           
