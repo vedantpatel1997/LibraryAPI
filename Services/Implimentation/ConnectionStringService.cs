@@ -10,7 +10,7 @@ public class ConnectionStringService
     {
         _configuration = configuration;
         _currentDbKey = "new"; // Default to "new" database
-        _currentConnectionString = _configuration.GetConnectionString("SQL_Server_Conn_Microsoft_DB");
+        _currentConnectionString = _configuration.GetConnectionString("SQL_Server_Conn_Microsoft_DB"); // Default to "new" database connection string
     }
 
     public string GetConnectionString() => _currentConnectionString;
