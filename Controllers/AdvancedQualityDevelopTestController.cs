@@ -1,7 +1,10 @@
 using AutoMapper;
 using LibraryManagement.API.Helper;
+using LibraryManagement.API.Modal;
 using LibraryManagement.API.Repos.Models;
+using LibraryManagement.API.Services.Implimentation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 namespace LibraryManagement.API.Controllers
 {
@@ -9,18 +12,20 @@ namespace LibraryManagement.API.Controllers
     [Route("api/[controller]")]
     public class AdvancedQualityDevelopTestController : ControllerBase
     {
+        private readonly ConnectionStringService _connectionStringService;
         private readonly ILogger<AdvancedQualityDevelopTestController> _logger;
         private readonly LibraryManagementContext _dbContext;
         private readonly IMapper _mapper;
         private readonly APIInfo _apiInfo;
         private readonly IConfiguration _configuration;
-        public AdvancedQualityDevelopTestController(ILogger<AdvancedQualityDevelopTestController> logger, LibraryManagementContext dbContext, IMapper mapper, IOptions<APIInfo> apiInfo, IConfiguration configuration)
+        public AdvancedQualityDevelopTestController(ILogger<AdvancedQualityDevelopTestController> logger, LibraryManagementContext dbContext, IMapper mapper, IOptions<APIInfo> apiInfo, IConfiguration configuration, ConnectionStringService connectionStringService)
         {
             _logger = logger;
             _dbContext = dbContext;
             _mapper = mapper;
             _apiInfo = apiInfo.Value;
             _configuration = configuration;
+            _connectionStringService = connectionStringService;
         }
 
         // 1. Endpoint to get API version
@@ -29,7 +34,9 @@ namespace LibraryManagement.API.Controllers
         {
             var versionResponse = new
             {
-                version = _apiInfo.Version
+                version = _apiInfo.Version,
+                gitHubRepo = "https://github.com/vedantpatel1997/LibraryAPI"
+
             };
             Console.WriteLine("Here is the API version, printing in the stdout VP.");
             return Ok(versionResponse);
@@ -92,15 +99,104 @@ namespace LibraryManagement.API.Controllers
         }
 
         // 5. Get the value of EnvCheck
-        [HttpGet("envcheck")]
-        public IActionResult GetEnvCheck()
+        [HttpPost("SwitchDatabase")]
+        public IActionResult SwitchDatabase([FromBody] SwitchDatabaseRequest request)
         {
-            var envCheckValue = _configuration["EnvCheck"];
-            var response = new
+            var response = new APIResponse<string>();
+            Console.WriteLine("SwitchDatabase request received");
+
+            // Validate input
+            if (request?.DbKey != "old" && request?.DbKey != "new")
             {
-                EnvCheck = envCheckValue
-            };
-            return Ok(response);
+                response.ResponseCode = 400;
+                response.IsSuccess = false;
+                response.ErrorMessage = "Invalid database key. Valid keys are 'old' or 'new'.";
+                Console.WriteLine($"Invalid DbKey received: {request?.DbKey}");
+                return BadRequest(response);
+            }
+
+            // Save the CURRENT DB KEY (not the raw connection string)
+            var previousDbKey = _connectionStringService.GetCurrentDbKey();
+
+            try
+            {
+                // Switch to the new database
+                _connectionStringService.SetConnectionString(request.DbKey);
+
+                // Test the new connection
+                var connectionString = _connectionStringService.GetConnectionString();
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                }
+
+                // Success response
+                response.ResponseCode = 200;
+                response.IsSuccess = true;
+                response.Data = $"Switched to {request.DbKey} database.";
+                Console.WriteLine($"Successfully switched to {request.DbKey} database.");
+                return Ok(response);
+            }
+            catch (SqlException ex)
+            {
+                // Revert to the PREVIOUS DB KEY
+                Console.WriteLine($"Reverting to previous database key: {previousDbKey}");
+                _connectionStringService.SetConnectionString(previousDbKey);
+
+                response.ResponseCode = 500;
+                response.IsSuccess = false;
+                response.ErrorMessage = $"Database connection failed. Reverted to {previousDbKey}.";
+                return StatusCode(500, response);
+            }
+            catch (Exception ex)
+            {
+                // Revert to the PREVIOUS DB KEY
+                Console.WriteLine($"Reverting to previous database key: {previousDbKey}");
+                _connectionStringService.SetConnectionString(previousDbKey);
+
+                response.ResponseCode = 500;
+                response.IsSuccess = false;
+                response.ErrorMessage = $"Unexpected error. Reverted to {previousDbKey}.";
+                return StatusCode(500, response);
+            }
+        }
+
+        [HttpGet("GetCurrentDatabase")]
+        public IActionResult GetCurrentDatabase()
+        {
+            var response = new APIResponse<bool>();
+            try
+            {
+                // Get the current database key ("old" or "new")
+                var currentDbKey = _connectionStringService.GetCurrentDbKey();
+
+                // Determine if the current database is "new"
+                bool databaseIsNew = currentDbKey == "new";
+
+                response.ResponseCode = 200;
+                response.IsSuccess = true;
+                response.Data = databaseIsNew;
+                Console.WriteLine($"Current database is {(databaseIsNew ? "new" : "old")}.");
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                response.ResponseCode = 500;
+                response.IsSuccess = false;
+                response.ErrorMessage = "Failed to retrieve the current database.";
+                Console.WriteLine($"Error retrieving current database: {ex.Message}");
+
+                return StatusCode(500, response);
+            }
+        }
+
+
+
+        // Add a model to represent the request body
+        public class SwitchDatabaseRequest
+        {
+            public string DbKey { get; set; }
         }
 
         // 6. Cancellation tocken concept

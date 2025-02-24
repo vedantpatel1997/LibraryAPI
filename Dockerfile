@@ -43,3 +43,11 @@ COPY sshd_config /etc/ssh/
 CMD service ssh start && exec dotnet LibraryManagement.API.dll
 
 EXPOSE 8080 2222
+
+
+#az login
+#az acr login --name libraryacr
+#docker build -t libraryacr.azurecr.io/library:frontend .
+#docker build -t libraryacr.azurecr.io/library:backend .
+#docker push libraryacr.azurecr.io/library:frontend
+#docker push libraryacr.azurecr.io/library:backend
