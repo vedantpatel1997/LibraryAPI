@@ -5,6 +5,23 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER root
 WORKDIR /app
 
+# Install troubleshooting tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    wget \
+    telnet \
+    netcat-openbsd \
+    iputils-ping \
+    dnsutils \
+    traceroute \
+    tcptraceroute \
+    vim \
+    tcpdump \
+    iperf \
+    mtr \
+    net-tools \
+    && rm -rf /var/lib/apt/lists/*
+
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
