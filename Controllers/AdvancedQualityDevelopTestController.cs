@@ -16,14 +16,12 @@ namespace LibraryManagement.API.Controllers
         private readonly ILogger<AdvancedQualityDevelopTestController> _logger;
         private readonly LibraryManagementContext _dbContext;
         private readonly IMapper _mapper;
-        private readonly APIInfo _apiInfo;
         private readonly IConfiguration _configuration;
-        public AdvancedQualityDevelopTestController(ILogger<AdvancedQualityDevelopTestController> logger, LibraryManagementContext dbContext, IMapper mapper, IOptions<APIInfo> apiInfo, IConfiguration configuration, ConnectionStringService connectionStringService)
+        public AdvancedQualityDevelopTestController(ILogger<AdvancedQualityDevelopTestController> logger, LibraryManagementContext dbContext, IMapper mapper, IConfiguration configuration, ConnectionStringService connectionStringService)
         {
             _logger = logger;
             _dbContext = dbContext;
             _mapper = mapper;
-            _apiInfo = apiInfo.Value;
             _configuration = configuration;
             _connectionStringService = connectionStringService;
         }
@@ -34,7 +32,7 @@ namespace LibraryManagement.API.Controllers
         {
             var versionResponse = new
             {
-                version = _apiInfo.Version,
+                version = _configuration.GetSection("APIInfo").Get<APIInfo>().Version,
                 gitHubRepo = "https://github.com/vedantpatel1997/LibraryAPI"
 
             };
@@ -341,12 +339,86 @@ namespace LibraryManagement.API.Controllers
             Console.WriteLine("Operation completed successfully.");
             return Ok("Operation completed successfully.");
         }
+
+        [HttpGet("appsettings")]
+        public IActionResult GetAppSettings()
+        {
+            try
+            {
+                // Bind the entire configuration to a dictionary
+                var appSettings = new Dictionary<string, object>();
+
+                // Add APIInfo
+                appSettings["APIInfo"] = _configuration.GetSection("APIInfo").Get<APIInfo>();
+
+                // Add JWTSettings
+                appSettings["JWTSettings"] = _configuration.GetSection("JWTSettings").Get<JWTSettings>();
+
+                // Add Logging
+                appSettings["Logging"] = _configuration.GetSection("Logging").Get<Logging>();
+
+                // Add KeyVault
+                appSettings["KeyVault"] = _configuration.GetSection("KeyVault").Get<KeyVault>();
+
+                // Add EnvCheck
+                appSettings["EnvCheck"] = _configuration.GetValue<string>("EnvCheck");
+
+                // Add AllowedHosts
+                appSettings["AllowedHosts"] = _configuration.GetValue<string>("AllowedHosts");
+
+                // Add ConnectionStrings
+                appSettings["ConnectionStrings"] = _configuration.GetSection("ConnectionStrings").Get<ConnectionStrings>();
+
+                return Ok(appSettings);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to retrieve appsettings.");
+                return StatusCode(500, "An error occurred while retrieving appsettings.");
+            }
+        }
     }
+
+
+
 
     // Example Request Data Class for POST body (you can adjust as needed)
     public class SomeRequestData
     {
         public string Name { get; set; }
         public int Number { get; set; }
+    }
+
+    public class APIInfo
+    {
+        public string Version { get; set; }
+    }
+
+    public class JWTSettings
+    {
+        public string securityKey { get; set; }
+    }
+
+    public class Logging
+    {
+        public LogLevel LogLevel { get; set; }
+    }
+
+    public class LogLevel
+    {
+        public string Default { get; set; }
+        public string Microsoft_AspNetCore { get; set; }
+    }
+
+    public class KeyVault
+    {
+        public string VaultUrl { get; set; }
+    }
+
+    public class ConnectionStrings
+    {
+        public string APIConnection { get; set; }
+        public string SQL_Server_Conn_Conestoga_DB { get; set; }
+        public string SQL_Server_Conn_Microsoft_DB { get; set; }
     }
 }
