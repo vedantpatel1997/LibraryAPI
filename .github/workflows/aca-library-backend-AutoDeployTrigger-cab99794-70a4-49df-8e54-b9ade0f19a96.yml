@@ -5,7 +5,7 @@ on:
   # Automatically trigger it when detected changes in repo
   push:
     branches: 
-      [ main ]
+      [ main1 ]
     paths:
     - '**'
     - '.github/workflows/aca-library-backend-AutoDeployTrigger-cab99794-70a4-49df-8e54-b9ade0f19a96.yml'
